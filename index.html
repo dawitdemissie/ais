@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Processing Integrity &amp; Availability Controls — Exercise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F8F6; --sheet:#FFFFFF; --ink:#1B2530; --muted:#5B6873;
+  --ledger:#1E5A48; --ledger-soft:#E2EEE8; --rule:#D3E2DA;
+  --pencil:#B8322A; --pencil-soft:#FBE9E7; --ok:#1E7A4F; --ok-soft:#E3F3EA;
+  --focus:#2F6FDB;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#0F1715; --sheet:#16211E; --ink:#E6EEEA; --muted:#9AAAA3;
+    --ledger:#6FC2A3; --ledger-soft:#1C2E28; --rule:#2A3D37;
+    --pencil:#F0857B; --pencil-soft:#3A1F1C; --ok:#6FD39E; --ok-soft:#173027;
+    --focus:#7FA8FF;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#0F1715; --sheet:#16211E; --ink:#E6EEEA; --muted:#9AAAA3;
+  --ledger:#6FC2A3; --ledger-soft:#1C2E28; --rule:#2A3D37;
+  --pencil:#F0857B; --pencil-soft:#3A1F1C; --ok:#6FD39E; --ok-soft:#173027;
+  --focus:#7FA8FF;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:16px; line-height:1.55;
+  background-image:linear-gradient(var(--rule) 1px, transparent 1px);
+  background-size:100% 32px; background-attachment:fixed;
+}
+h1,h2,h3{font-family:Spectral,Georgia,"Times New Roman",serif;line-height:1.2;margin:0}
+h1{font-size:clamp(1.9rem,4.5vw,2.8rem);font-weight:700}
+h2{font-size:1.6rem;font-weight:700}
+h3{font-size:1.1rem;font-weight:700}
+p{margin:0 0 .9em}
+a{color:var(--ledger)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+.shell{max-width:1060px;margin:0 auto;padding:24px 18px 64px;display:grid;grid-template-columns:240px 1fr;gap:28px}
+@media (max-width:820px){.shell{grid-template-columns:1fr;gap:16px}}
+
+.masthead{grid-column:1/-1;padding:28px 0 8px;border-bottom:3px double var(--ledger)}
+.masthead p{color:var(--muted);max-width:62ch;margin-top:10px}
+.who{font-size:.95rem;color:var(--ledger);font-weight:600;margin-top:6px}
+
+nav.steps{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);align-self:start}
+nav.steps ol{list-style:none;margin:0;padding:0;counter-reset:s}
+nav.steps li{counter-increment:s}
+nav.steps button{
+  all:unset;cursor:pointer;display:flex;gap:10px;align-items:baseline;width:100%;
+  padding:9px 10px;border-left:3px solid transparent;color:var(--muted);font-weight:500
+}
+nav.steps button::before{content:counter(s);font-family:Spectral,Georgia,serif;font-weight:700;min-width:1.2em;color:var(--ledger)}
+nav.steps button[aria-current="step"]{border-left-color:var(--ledger);color:var(--ink);background:var(--ledger-soft)}
+nav.steps button:disabled{opacity:.45;cursor:not-allowed}
+nav.steps button:focus-visible{outline:3px solid var(--focus)}
+.tick{margin-left:auto;color:var(--pencil);font-family:Spectral,serif;font-weight:700}
+@media (max-width:820px){
+  nav.steps{position:static}
+  nav.steps ol{display:flex;overflow-x:auto;gap:4px;border-bottom:1px solid var(--rule)}
+  nav.steps button{border-left:none;border-bottom:3px solid transparent;white-space:nowrap;padding:8px 10px}
+  nav.steps button[aria-current="step"]{border-bottom-color:var(--ledger)}
+}
+
+main{min-width:0}
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-left:6px solid var(--ledger);padding:28px clamp(18px,4vw,36px);border-radius:4px}
+.sheet > p.lead{color:var(--muted);max-width:66ch}
+.part-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:10px}
+.pts{color:var(--muted);font-size:.9rem}
+
+.q{padding:18px 0;border-top:1px solid var(--rule)}
+.q:first-of-type{border-top:none}
+.q-text{font-weight:500;max-width:68ch;margin-bottom:10px}
+.q-num{font-family:Spectral,Georgia,serif;font-weight:700;color:var(--ledger);margin-right:6px}
+select,input[type=text],input[type=number],textarea{
+  font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--rule);
+  border-radius:4px;padding:9px 11px;max-width:100%
+}
+select{min-width:min(320px,100%)}
+textarea{width:100%;min-height:220px;resize:vertical;line-height:1.6}
+label.opt{display:flex;gap:10px;align-items:flex-start;padding:7px 8px;border-radius:4px;cursor:pointer;max-width:68ch}
+label.opt:hover{background:var(--ledger-soft)}
+label.opt input{margin-top:5px;accent-color:var(--ledger)}
+.field{display:grid;gap:6px;margin-bottom:14px;max-width:360px}
+.field span{font-weight:600;font-size:.95rem}
+
+.ledger-wrap{overflow-x:auto;margin:12px 0 18px}
+table.ledger{border-collapse:collapse;min-width:440px;font-variant-numeric:tabular-nums}
+table.ledger th,table.ledger td{padding:8px 14px;border-bottom:1px solid var(--rule);text-align:right}
+table.ledger th:first-child,table.ledger td:first-child{text-align:left}
+table.ledger thead th{border-bottom:2px solid var(--ledger);font-weight:600;color:var(--ledger)}
+
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:8px}
+
+.fb{margin-top:10px;padding:10px 12px;border-radius:4px;font-size:.95rem;max-width:68ch}
+.fb.right{background:var(--ok-soft);border-left:3px solid var(--ok)}
+.fb.wrong{background:var(--pencil-soft);border-left:3px solid var(--pencil)}
+.fb strong{font-weight:700}
+.mark{font-family:Spectral,Georgia,serif;font-weight:700;font-size:1.15rem;margin-right:6px}
+.right .mark{color:var(--ok)} .wrong .mark{color:var(--pencil)}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;padding-top:18px;border-top:1px solid var(--rule)}
+button.btn{
+  font:inherit;font-weight:600;cursor:pointer;border-radius:4px;padding:10px 18px;
+  border:1px solid var(--ledger);background:var(--ledger);color:var(--sheet)
+}
+button.btn.ghost{background:transparent;color:var(--ledger)}
+button.btn:disabled{opacity:.5;cursor:not-allowed}
+.msg{color:var(--pencil);font-weight:500;margin-top:10px}
+
+.score-big{font-family:Spectral,Georgia,serif;font-size:clamp(3rem,10vw,5rem);font-weight:700;color:var(--ledger);line-height:1}
+.score-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--rule);max-width:460px;font-variant-numeric:tabular-nums}
+.note{color:var(--muted);font-size:.92rem;max-width:66ch}
+.wc{color:var(--muted);font-size:.9rem;margin-top:6px}
+.concept{background:var(--ledger-soft);padding:14px 16px;border-radius:4px;margin:14px 0 4px;max-width:68ch;font-size:.95rem}
+
+@media print{
+  body{background:#fff;color:#000}
+  nav.steps,.actions,.no-print{display:none!important}
+  .shell{display:block}
+  .sheet{border:none;padding:0}
+}
+@media (prefers-reduced-motion: no-preference){
+  .sheet{animation:in .25s ease-out}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="masthead">
+    <h1>Processing integrity and availability controls</h1>
+    <p>An accounting information systems exercise. Work through the five parts in order, check your answers as you go, then review your score and print or copy your results for your instructor.</p>
+    <div class="who" id="who"></div>
+  </header>
+  <nav class="steps" aria-label="Exercise parts"><ol id="stepList"></ol></nav>
+  <main id="main" tabindex="-1"></main>
+</div>
+
+<script>
+/* ---------------- Exercise content ---------------- */
+const CONTROLS = [
+  "Field check","Sign check","Limit check","Range check","Validity check",
+  "Reasonableness test","Check digit verification","Sequence check","Completeness check",
+  "Concurrent update control","Parity checking","Uninterruptible power supply (UPS)",
+  "RAID (redundant disk arrays)","Hot site","Cold site"
+];
+
+const PART1 = [
+  {t:"An employee number is entered as 4526 instead of 4562. The system rejects it because the last digit, calculated from the other digits, does not match.", a:"Check digit verification",
+   why:"A check digit is computed from the other digits of an ID; transposition errors produce a different check digit and are caught."},
+  {t:"A payroll clerk enters 85 hours for one employee’s weekly timecard. The system rejects any value above 60.", a:"Limit check",
+   why:"A limit check tests a value against a single upper (or lower) bound."},
+  {t:"The letters “ten” are typed into the Quantity Ordered field and the entry is rejected.", a:"Field check",
+   why:"A field check confirms the data type is correct — numeric fields must contain only numbers."},
+  {t:"A sales order is rejected because customer number 77210 does not exist in the customer master file.", a:"Validity check",
+   why:"A validity check compares an ID against existing master-file records."},
+  {t:"Two clerks open the same customer record at the same time. The system locks the record so only one update can be saved at a time.", a:"Concurrent update control",
+   why:"Concurrent update controls (record locking) stop two users from overwriting each other’s changes."},
+  {t:"A return is keyed with a quantity of −3 in a field that must always be positive.", a:"Sign check",
+   why:"A sign check verifies a field has the correct arithmetic sign."},
+  {t:"Before posting a batch of checks, the system flags that check numbers 2210 and 2214 are missing from the series.", a:"Sequence check",
+   why:"A sequence check identifies gaps or duplicates in prenumbered documents."},
+  {t:"The building loses power. The servers keep running long enough to finish transactions and shut down in an orderly way.", a:"Uninterruptible power supply (UPS)",
+   why:"A UPS provides battery power so systems can continue briefly or shut down without corrupting data."},
+  {t:"One hard drive in the file server fails, yet no data is lost and users keep working, because the data is written to several drives.", a:"RAID (redundant disk arrays)",
+   why:"RAID is a fault-tolerance control: data is written redundantly across multiple disks."},
+  {t:"After a flood, the company moves operations to a fully equipped facility with computers and current software, and is running again within hours.", a:"Hot site",
+   why:"A hot site is ready to use immediately. A cold site has power and space but no equipment, so recovery takes much longer."}
+];
+
+const BATCH = [
+  {inv:"1041", cust:3307, amt:1250.00},
+  {inv:"1042", cust:2251, amt:480.50},
+  {inv:"1043", cust:3307, amt:2015.25},
+  {inv:"1044", cust:1189, amt:96.00},
+  {inv:"1045", cust:4020, amt:735.75}
+];
+const ANS_COUNT = 5, ANS_FIN = 4577.50, ANS_HASH = 14074;
+const DIAG = {
+  q:"After the batch is processed, the system recalculates: record count 5, financial total $4,577.50, hash total 14,056. What most likely happened?",
+  opts:["A dollar amount was keyed incorrectly","A customer number was keyed incorrectly","An invoice was lost during processing","An invoice was processed twice"],
+  a:1,
+  why:"Record count and financial total still agree, so no record was lost or duplicated and no amount changed. Only the hash total differs (by 18, a multiple of 9 — the signature of a transposition such as 4020 keyed as 4002), so a customer number was entered wrongly."
+};
+
+const PART3 = {
+  scenario:"Kestrel Supply takes a full backup every Sunday night. A server fails on Thursday at 2:00 p.m. Answer the questions below.",
+  backups:["Sunday full backup","Monday night backup","Tuesday night backup","Wednesday night backup"],
+  q1:{t:"If Monday–Wednesday nights are incremental backups, which backups must be restored? Select all that apply.", a:[0,1,2,3],
+      why:"An incremental backup holds only changes since the previous backup, so the full backup and every incremental after it are needed, in order."},
+  q2:{t:"If Monday–Wednesday nights are differential backups instead, which backups must be restored? Select all that apply.", a:[0,3],
+      why:"A differential backup holds all changes since the last full backup, so only the full backup and the most recent differential are needed."},
+  q3:{t:"With nightly backups only, which data is lost and must be re-entered?",
+      opts:["Nothing — the backups cover everything","All transactions since Sunday’s full backup","Transactions entered on Thursday before 2:00 p.m.","Only transactions entered on Wednesday"], a:2,
+      why:"Data entered after the last backup (Wednesday night) is not in any backup. Shortening that gap is what the recovery point objective (RPO) is about."}
+};
+
+const PART4 = [
+  {t:"The amount of data an organization is willing to re-enter or lose after a failure is its:",
+   o:["Recovery time objective (RTO)","Recovery point objective (RPO)","Mean time between failures","Archive retention period"], a:1,
+   why:"RPO measures acceptable data loss; RTO measures acceptable downtime."},
+  {t:"An organization that can tolerate almost no data loss should use:",
+   o:["Weekly full backups","Nightly incremental backups","Real-time mirroring","Annual archives"], a:2,
+   why:"Real-time mirroring keeps a continuously updated copy at a second site, giving an RPO near zero."},
+  {t:"Which statement about a disaster recovery plan (DRP) and a business continuity plan (BCP) is correct?",
+   o:["They are the same document","A DRP restores IT functions; a BCP covers resuming all business operations","A BCP covers only IT; a DRP covers the whole business","Neither needs to be tested if backups exist"], a:1,
+   why:"The DRP focuses on restoring IT; the BCP is broader and covers all critical business processes. Both must be tested regularly."},
+  {t:"Checking that the sum of the column totals equals the sum of the row totals in a spreadsheet is called:",
+   o:["A zero-balance test","Cross-footing","A hash total","Data matching"], a:1,
+   why:"Cross-footing is a processing control that confirms arithmetic accuracy. A zero-balance test checks that clearing accounts end at zero."},
+  {t:"Which of these is an output control?",
+   o:["A field check on the quantity field","Users reviewing reports for reasonableness and reconciling them to control totals","Prenumbered source documents","Record locking during updates"], a:1,
+   why:"User review and reconciliation of output are output controls. Field checks and prenumbering are input controls; record locking is a processing control."},
+  {t:"A parity bit is added to data sent across a network in order to:",
+   o:["Encrypt the data","Detect errors that occur during transmission","Compress the file","Authenticate the sender"], a:1,
+   why:"Parity checking (and checksums) detect whether bits were changed during transmission."},
+  {t:"How does an archive differ from a backup?",
+   o:["An archive is a copy kept indefinitely as a historical record; a backup is a copy of current data for recovery","They are identical","An archive is always incremental","A backup is kept forever; an archive is deleted weekly"], a:0,
+   why:"Backups support recovery of current data; archives preserve historical records and should also be stored securely offsite."},
+  {t:"Which control most directly reduces the risk of a system being down because of a known software flaw?",
+   o:["Batch totals","Patch management","A cold site","Turnaround documents"], a:1,
+   why:"Applying patches promptly is a preventive availability control that removes known weaknesses."}
+];
+
+const PART5 = "Coastline Crafts, a small online retailer, takes orders on a single server kept in a back office. Order data is typed in by two staff members from emailed requests, and the server is backed up to a USB drive every Friday that stays on the same shelf. Recommend two processing integrity controls and two availability controls. For each, name the control and explain the specific risk at Coastline Crafts that it addresses.";
+
+const PARTS = [
+  {id:"start",  name:"Start"},
+  {id:"match",  name:"Match the control", pts:10},
+  {id:"batch",  name:"Batch totals", pts:4},
+  {id:"backup", name:"Backup and recovery", pts:3},
+  {id:"concepts", name:"Concept check", pts:8},
+  {id:"case",   name:"Case analysis"},
+  {id:"results",name:"Results"}
+];
+
+/* ---------------- State ---------------- */
+const KEY = "pia-exercise-v1";
+let S = {student:{name:"",id:"",course:""}, step:0, ans:{match:{},batch:{},backup:{q1:[],q2:[],q3:null},concepts:{},case:""}, checked:{}};
+try{ const raw = localStorage.getItem(KEY); if(raw){ const p = JSON.parse(raw); if(p && p.ans) S = Object.assign(S,p);} }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money = n => n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const num = v => { const n = parseFloat(String(v).replace(/[$,\s]/g,"")); return isNaN(n)?null:n; };
+
+/* ---------------- Scoring ---------------- */
+function scoreMatch(){ return PART1.reduce((s,q,i)=>s+(S.ans.match[i]===q.a?1:0),0); }
+function batchResults(){
+  const b=S.ans.batch;
+  return {
+    count: num(b.count)===ANS_COUNT,
+    fin: num(b.fin)!==null && Math.abs(num(b.fin)-ANS_FIN)<0.005,
+    hash: num(b.hash)===ANS_HASH,
+    diag: b.diag===DIAG.a
+  };
+}
+function scoreBatch(){ return Object.values(batchResults()).filter(Boolean).length; }
+const sameSet=(a,b)=>a.length===b.length && a.every(x=>b.includes(x));
+function backupResults(){
+  const b=S.ans.backup;
+  return {q1:sameSet(b.q1,PART3.q1.a), q2:sameSet(b.q2,PART3.q2.a), q3:b.q3===PART3.q3.a};
+}
+function scoreBackup(){ return Object.values(backupResults()).filter(Boolean).length; }
+function scoreConcepts(){ return PART4.reduce((s,q,i)=>s+(S.ans.concepts[i]===q.a?1:0),0); }
+const wordCount = t => (t.trim().match(/\S+/g)||[]).length;
+
+function fb(ok, why, correctText){
+  return `<div class="fb ${ok?"right":"wrong"}" role="status"><span class="mark" aria-hidden="true">${ok?"✓":"✗"}</span><strong>${ok?"Correct.":"Not quite."}</strong> ${!ok && correctText?`Answer: ${esc(correctText)}. `:""}${esc(why)}</div>`;
+}
+
+/* ---------------- Navigation ---------------- */
+function canEnter(i){ return i===0 || (S.student.name.trim() && S.student.id.trim()); }
+function renderNav(){
+  $("#stepList").innerHTML = PARTS.map((p,i)=>{
+    const done = S.checked[p.id] || (p.id==="case" && wordCount(S.ans.case)>0);
+    return `<li><button type="button" data-go="${i}" ${i===S.step?'aria-current="step"':""} ${canEnter(i)?"":"disabled"}>${esc(p.name)}${done && i!==S.step?'<span class="tick" aria-label="completed">✓</span>':""}</button></li>`;
+  }).join("");
+  $("#who").textContent = S.student.name ? `${S.student.name} · ${S.student.id}${S.student.course?" · "+S.student.course:""}` : "";
+}
+function go(i){
+  if(!canEnter(i)) return;
+  S.step=i; save(); render();
+  window.scrollTo({top:0}); $("#main").focus({preventScroll:true});
+}
+document.addEventListener("click",e=>{
+  const g=e.target.closest("[data-go]"); if(g){ go(+g.dataset.go); }
+});
+
+function navButtons(checkId){
+  const i=S.step;
+  return `<div class="actions">
+    ${i>0?`<button class="btn ghost" type="button" data-go="${i-1}">Back</button>`:""}
+    ${checkId?`<button class="btn ghost" type="button" id="checkBtn">Check answers</button>`:""}
+    ${i<PARTS.length-1?`<button class="btn" type="button" data-go="${i+1}">Continue</button>`:""}
+  </div>`;
+}
+
+/* ---------------- Views ---------------- */
+function viewStart(){
+  return `<section class="sheet">
+    <h2>Before you begin</h2>
+    <p class="lead">Processing integrity controls make sure data is complete, accurate and valid as it moves through input, processing and output. Availability controls keep systems running and let the organization recover when they fail. This exercise takes about 30 minutes. Your answers save automatically in this browser.</p>
+    <div class="field"><span>Full name</span><input type="text" id="sName" autocomplete="name" value="${esc(S.student.name)}"></div>
+    <div class="field"><span>Student ID</span><input type="text" id="sId" value="${esc(S.student.id)}"></div>
+    <div class="field"><span>Course or section (optional)</span><input type="text" id="sCourse" value="${esc(S.student.course)}"></div>
+    <div class="msg" id="startMsg" role="alert"></div>
+    <div class="actions"><button class="btn" type="button" id="beginBtn">Start the exercise</button></div>
+  </section>`;
+}
+function bindStart(){
+  $("#beginBtn").onclick=()=>{
+    S.student={name:$("#sName").value.trim(), id:$("#sId").value.trim(), course:$("#sCourse").value.trim()};
+    if(!S.student.name || !S.student.id){ $("#startMsg").textContent="Enter your full name and student ID to start."; return; }
+    save(); go(1);
+  };
+}
+
+function viewMatch(){
+  const show=S.checked.match;
+  return `<section class="sheet">
+    <div class="part-head"><h2>Match the control</h2><span class="pts">10 points</span></div>
+    <p class="lead">Each situation describes a control at work. Choose the control that best fits. Some controls in the list are not used.</p>
+    ${PART1.map((q,i)=>`<div class="q">
+      <div class="q-text"><span class="q-num">${i+1}.</span>${esc(q.t)}</div>
+      <select data-match="${i}" aria-label="Control for situation ${i+1}">
+        <option value="">Choose a control</option>
+        ${CONTROLS.map(c=>`<option ${S.ans.match[i]===c?"selected":""}>${esc(c)}</option>`).join("")}
+      </select>
+      ${show?fb(S.ans.match[i]===q.a,q.why,q.a):""}
+    </div>`).join("")}
+    ${navButtons("match")}
+  </section>`;
+}
+function bindMatch(){
+  document.querySelectorAll("[data-match]").forEach(s=>s.onchange=()=>{S.ans.match[s.dataset.match]=s.value; save();});
+  $("#checkBtn").onclick=()=>{S.checked.match=true; save(); render();};
+}
+
+function viewBatch(){
+  const show=S.checked.batch, r=batchResults(), b=S.ans.batch;
+  return `<section class="sheet">
+    <div class="part-head"><h2>Batch totals</h2><span class="pts">4 points</span></div>
+    <p class="lead">Before a batch of sales invoices is keyed in, a clerk calculates batch totals. The computer recalculates them after processing; any difference signals an error.</p>
+    <div class="concept"><strong>Reminder.</strong> A record count is the number of records. A financial total sums a field that has monetary meaning. A hash total sums a field that has no meaning on its own, such as customer numbers.</div>
+    <div class="ledger-wrap"><table class="ledger">
+      <thead><tr><th scope="col">Invoice</th><th scope="col">Customer no.</th><th scope="col">Amount ($)</th></tr></thead>
+      <tbody>${BATCH.map(x=>`<tr><td>${x.inv}</td><td>${x.cust}</td><td>${money(x.amt)}</td></tr>`).join("")}</tbody>
+    </table></div>
+    <div class="calc">
+      <label class="field"><span>Record count</span><input type="text" inputmode="numeric" data-b="count" value="${esc(b.count||"")}"></label>
+      <label class="field"><span>Financial total ($)</span><input type="text" inputmode="decimal" data-b="fin" value="${esc(b.fin||"")}"></label>
+      <label class="field"><span>Hash total (customer nos.)</span><input type="text" inputmode="numeric" data-b="hash" value="${esc(b.hash||"")}"></label>
+    </div>
+    ${show?fb(r.count,"Count each invoice once.",String(ANS_COUNT))+fb(r.fin,"Add the five invoice amounts.","$"+money(ANS_FIN))+fb(r.hash,"Add all five customer numbers, including 3307 twice.",ANS_HASH.toLocaleString()):""}
+    <div class="q">
+      <div class="q-text"><span class="q-num">4.</span>${esc(DIAG.q)}</div>
+      ${DIAG.opts.map((o,i)=>`<label class="opt"><input type="radio" name="diag" value="${i}" ${b.diag===i?"checked":""}>${esc(o)}</label>`).join("")}
+      ${show?fb(r.diag,DIAG.why,DIAG.opts[DIAG.a]):""}
+    </div>
+    ${navButtons("batch")}
+  </section>`;
+}
+function bindBatch(){
+  document.querySelectorAll("[data-b]").forEach(i=>i.oninput=()=>{S.ans.batch[i.dataset.b]=i.value; save();});
+  document.querySelectorAll('input[name="diag"]').forEach(i=>i.onchange=()=>{S.ans.batch.diag=+i.value; save();});
+  $("#checkBtn").onclick=()=>{S.checked.batch=true; save(); render();};
+}
+
+function viewBackup(){
+  const show=S.checked.backup, r=backupResults(), b=S.ans.backup;
+  const box=(qk,q,n)=>`<div class="q"><div class="q-text"><span class="q-num">${n}.</span>${esc(q.t)}</div>
+    ${PART3.backups.map((o,i)=>`<label class="opt"><input type="checkbox" data-bk="${qk}" value="${i}" ${b[qk].includes(i)?"checked":""}>${esc(o)}</label>`).join("")}
+    ${show?fb(r[qk],q.why,q.a.map(i=>PART3.backups[i]).join(", ")):""}</div>`;
+  return `<section class="sheet">
+    <div class="part-head"><h2>Backup and recovery</h2><span class="pts">3 points</span></div>
+    <p class="lead">${esc(PART3.scenario)}</p>
+    ${box("q1",PART3.q1,1)}
+    ${box("q2",PART3.q2,2)}
+    <div class="q"><div class="q-text"><span class="q-num">3.</span>${esc(PART3.q3.t)}</div>
+      ${PART3.q3.opts.map((o,i)=>`<label class="opt"><input type="radio" name="bq3" value="${i}" ${b.q3===i?"checked":""}>${esc(o)}</label>`).join("")}
+      ${show?fb(r.q3,PART3.q3.why,PART3.q3.opts[PART3.q3.a]):""}</div>
+    ${navButtons("backup")}
+  </section>`;
+}
+function bindBackup(){
+  document.querySelectorAll("[data-bk]").forEach(c=>c.onchange=()=>{
+    const k=c.dataset.bk, v=+c.value, arr=S.ans.backup[k];
+    S.ans.backup[k]= c.checked ? [...new Set([...arr,v])] : arr.filter(x=>x!==v); save();
+  });
+  document.querySelectorAll('input[name="bq3"]').forEach(i=>i.onchange=()=>{S.ans.backup.q3=+i.value; save();});
+  $("#checkBtn").onclick=()=>{S.checked.backup=true; save(); render();};
+}
+
+function viewConcepts(){
+  const show=S.checked.concepts;
+  return `<section class="sheet">
+    <div class="part-head"><h2>Concept check</h2><span class="pts">8 points</span></div>
+    <p class="lead">Choose the best answer for each question.</p>
+    ${PART4.map((q,i)=>`<div class="q"><div class="q-text"><span class="q-num">${i+1}.</span>${esc(q.t)}</div>
+      ${q.o.map((o,j)=>`<label class="opt"><input type="radio" name="c${i}" data-c="${i}" value="${j}" ${S.ans.concepts[i]===j?"checked":""}>${esc(o)}</label>`).join("")}
+      ${show?fb(S.ans.concepts[i]===q.a,q.why,q.o[q.a]):""}</div>`).join("")}
+    ${navButtons("concepts")}
+  </section>`;
+}
+function bindConcepts(){
+  document.querySelectorAll("[data-c]").forEach(i=>i.onchange=()=>{S.ans.concepts[i.dataset.c]=+i.value; save();});
+  $("#checkBtn").onclick=()=>{S.checked.concepts=true; save(); render();};
+}
+
+function viewCase(){
+  return `<section class="sheet">
+    <div class="part-head"><h2>Case analysis</h2><span class="pts">Graded by your instructor</span></div>
+    <p class="lead">${esc(PART5)}</p>
+    <label for="caseText" class="field" style="max-width:none"><span>Your answer (aim for 150–250 words)</span></label>
+    <textarea id="caseText">${esc(S.ans.case)}</textarea>
+    <div class="wc" id="wc">${wordCount(S.ans.case)} words</div>
+    ${navButtons(null)}
+  </section>`;
+}
+function bindCase(){
+  const t=$("#caseText");
+  t.oninput=()=>{S.ans.case=t.value; $("#wc").textContent=wordCount(t.value)+" words"; save();};
+}
+
+function summaryText(){
+  const s=[scoreMatch(),scoreBatch(),scoreBackup(),scoreConcepts()], total=s.reduce((a,b)=>a+b,0);
+  return [
+    "Processing Integrity and Availability Controls — Exercise results",
+    `Student: ${S.student.name}  |  ID: ${S.student.id}${S.student.course?"  |  "+S.student.course:""}`,
+    `Completed: ${new Date().toLocaleString()}`,
+    "",
+    `Match the control: ${s[0]}/10`,
+    `Batch totals: ${s[1]}/4`,
+    `Backup and recovery: ${s[2]}/3`,
+    `Concept check: ${s[3]}/8`,
+    `Auto-graded total: ${total}/25`,
+    "",
+    "Case analysis:",
+    S.ans.case.trim() || "(no answer)"
+  ].join("\n");
+}
+
+function viewResults(){
+  const s=[scoreMatch(),scoreBatch(),scoreBackup(),scoreConcepts()], total=s.reduce((a,b)=>a+b,0);
+  const rows=[["Match the control",s[0],10],["Batch totals",s[1],4],["Backup and recovery",s[2],3],["Concept check",s[3],8]];
+  const unchecked=["match","batch","backup","concepts"].filter(k=>!S.checked[k]);
+  return `<section class="sheet">
+    <h2>Your results</h2>
+    <p class="lead">${esc(S.student.name)} · ${esc(S.student.id)}</p>
+    <div class="score-big">${total}<span style="font-size:.45em;color:var(--muted)"> / 25</span></div>
+    <p class="note">Auto-graded parts only. Your case analysis (${wordCount(S.ans.case)} words) is graded by your instructor.</p>
+    ${unchecked.length?`<p class="msg">You have not checked every part yet. Your score still counts what you answered.</p>`:""}
+    <div style="margin:18px 0">${rows.map(r=>`<div class="score-row"><span>${r[0]}</span><strong>${r[1]} / ${r[2]}</strong></div>`).join("")}</div>
+    <h3 style="margin-top:20px">Submit to your instructor</h3>
+    <p class="note">Print this page to PDF, or copy the summary below and paste it into your course site or an email.</p>
+    <textarea id="summary" readonly style="min-height:200px">${esc(summaryText())}</textarea>
+    <div class="actions">
+      <button class="btn" type="button" id="copyBtn">Copy summary</button>
+      <button class="btn ghost" type="button" id="printBtn">Print or save as PDF</button>
+      <button class="btn ghost" type="button" id="resetBtn">Start over</button>
+    </div>
+    <div class="note no-print" id="copyMsg" role="status" style="margin-top:8px"></div>
+  </section>`;
+}
+function bindResults(){
+  $("#copyBtn").onclick=async()=>{
+    const ta=$("#summary");
+    try{ await navigator.clipboard.writeText(ta.value); $("#copyMsg").textContent="Summary copied."; }
+    catch(e){ ta.focus(); ta.select(); $("#copyMsg").textContent="Summary selected — press Ctrl+C or ⌘C to copy."; }
+  };
+  $("#printBtn").onclick=()=>{ try{ window.print(); }catch(e){ $("#copyMsg").textContent="Printing is blocked here. Use Copy summary instead."; } };
+  $("#resetBtn").onclick=()=>{
+    if(!confirm("Clear all your answers and start over?")) return;
+    try{ localStorage.removeItem(KEY);}catch(e){}
+    S={student:{name:"",id:"",course:""},step:0,ans:{match:{},batch:{},backup:{q1:[],q2:[],q3:null},concepts:{},case:""},checked:{}};
+    render();
+  };
+}
+
+const VIEWS={start:[viewStart,bindStart],match:[viewMatch,bindMatch],batch:[viewBatch,bindBatch],backup:[viewBackup,bindBackup],concepts:[viewConcepts,bindConcepts],case:[viewCase,bindCase],results:[viewResults,bindResults]};
+function render(){
+  if(!canEnter(S.step)) S.step=0;
+  const [v,b]=VIEWS[PARTS[S.step].id];
+  $("#main").innerHTML=v(); b(); renderNav();
+}
+render();
+</script>
+</body>
+</html>
